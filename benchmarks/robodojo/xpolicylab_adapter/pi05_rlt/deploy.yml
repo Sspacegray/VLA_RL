@@ -1,0 +1,27 @@
+# XPolicyLab standard key set (CONTRIBUTING.md § deploy.yml).
+# pi05_rlt runs on the VLA_RL repo env, not a dedicated conda env.
+policy_name: Pi05_RLT
+protocol: ws
+host: localhost
+port: null
+bench_name: null
+task_name: null
+ckpt_name: null
+env_cfg_type: null
+seed: null
+action_type: null
+gpu_id: null
+eval_batch: false
+
+# pi05_rlt-specific keys (documented in benchmarks/robodojo/xpolicylab_adapter/pi05_rlt/README.md).
+# Checkpoint paths are user-owned; install_adapter.sh requires them to exist.
+pi05_path: null          # pretrained π0.5 dir (config.json + model.safetensors)
+rlt_checkpoint: null     # Stage-1 paper_v1 image-only checkpoint (.pt)
+actor_checkpoint: null   # Stage-2 paper_full_output_v1 checkpoint (.pt)
+stats_path: null         # optional dataset meta/stats.json override
+actor_execution_steps: 10
+rtc_execution_horizon: 10
+# A slow cold load of the 3B backbone needs a generous request budget.
+request_timeout_s: 600.0
+max_connect_attempts: 360
+max_connect_seconds: 3600.0

@@ -1,0 +1,92 @@
+{
+  // ═══════════════════════════════════════════════════════════════════
+  //  Inference / deployment config — Piper (7D: joint_1..6 rad + gripper m)
+  //  Usage: python scripts/infer_rlt_stage2_pi05.py --config configs/piper_infer_pi05.json
+  //  The actor checkpoint to run is "resume_from". Keep "dry_run": true
+  //  for the first run, then set it to false. JSONC comments allowed.
+  //
+  //  Piper notes: robot_type "piper" (CAN, no serial ports), 7D action/state,
+  //  policy actions via send_policy_action with max_joint_step_rad (rad).
+  //  leader_mirror stays false — the CAN leader has no torque/feedback path.
+  // ═══════════════════════════════════════════════════════════════════
+
+  // ── Models ─────────────────────────────────────────────────────────
+  "pi05_path": "/path/to/pi05/pretrained_model",
+  "rlt_checkpoint": "/path/to/rlt_stage1/best_checkpoint.pt",
+  "resume_from": "/path/to/rlt_stage2/final_checkpoint.pt",
+  "tokenizer_path": "/path/to/paligemma_tokenizer",
+  "stats_path": "",               // "" = read normalization from the checkpoint
+
+  // ── Task and hardware ──────────────────────────────────────────────
+  "task": "Pick up the object and place it in the box",
+  "robot_type": "piper",
+  "max_joint_step_rad": 0.15,     // per-step joint delta limit (rad)
+  "camera_names": ["top", "wrist"],
+  "cameras": {
+    "top":   { "type": "opencv", "index_or_path": 0, "width": 640, "height": 480, "fps": 30, "fourcc": "MJPG", "warmup_s": 3, "rotation": 0 },
+    "wrist": { "type": "opencv", "index_or_path": 3, "width": 640, "height": 480, "fps": 30, "fourcc": "MJPG", "warmup_s": 3, "rotation": 0 }
+  },
+  "camera_map": {
+    "top": "observation.images.top",
+    "wrist": "observation.images.wrist"
+  },
+  "control_fps": 50.0,
+  "steps_per_episode": 1000,
+  "max_episodes": 200,
+  "reset_tolerance_deg": 0.10,    // native units (rad) on Piper
+  "intervention_threshold": 0.15, // native units (rad) on Piper
+  "camera_preflight_retries": 6,
+  "camera_preflight_delay_s": 0.5,
+
+  // ── Human takeover (HIL) ───────────────────────────────────────────
+  "leader_mirror": false,         // must stay false on Piper (no leader write path)
+  "leader_hil_min_dwell_s": 2.0,
+  "intervention_release_frames": 60,
+  "intervention_reward_bonus": 0.0,
+
+  // ── Critical phase ─────────────────────────────────────────────────
+  "auto_critical": false,
+  "critical_classifier": "",
+  "actor_critical_delay_steps": 15,
+  "auto_critical_threshold_on": 0.75,
+  "auto_critical_threshold_off": 0.45,
+  "auto_critical_smooth_steps": 4,
+  "auto_critical_min_on_chunks": 3,
+  "auto_critical_start_delay_steps": 60,
+  "auto_critical_once": true,
+  "auto_critical_override_cooldown": 3.0,
+  "save_critical_frames": true,
+  "critical_frames_dir": "",
+
+  // ── Rollout recording (optional) ───────────────────────────────────
+  "record_dataset": false,
+  "record_repo_id": "local/piper_deploy_rollouts",
+  "record_root": "",
+  "record_task": "",
+  "record_videos": true,
+  "record_hil_steps": true,
+  "record_streaming_encoding": true,
+  "record_encoder_threads": 2,
+
+  // ── Rate / hidden size: must match the checkpoint ──────────────────
+  "policy_fixed_std": 0.05,
+  "actor_hidden_dim": 256,
+  "actor_num_layers": 2,
+  "critic_hidden_dim": 256,
+  "critic_num_layers": 2,
+  "reference_dropout": 0.5,
+  "delta_weight": 0.02,
+  "online_bc_weight": 10.0,
+  "actor_residual_scale": 0.0,
+
+  // ── Output, scoring and run mode ───────────────────────────────────
+  "output_dir": "outputs/rlt_deploy_piper",
+  "save_debug_obs": false,
+  "inference_score": true,
+  "device": "cuda",
+  "dry_run": true,
+  "display_data": true,
+  "display_fps": 30.0,
+  "display_session_name": "rlt_deploy_piper",
+  "display_compressed_images": true
+}

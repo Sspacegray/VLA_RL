@@ -1,0 +1,25 @@
+name: VLA_RL CPU contracts
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: '3.12'
+      - run: uv venv && uv pip install -e '.[test,pi]'
+      - name: Import real policies and compile
+        run: |
+          .venv/bin/python -c 'from lerobot.policies.pi05.modeling_pi05 import PI05Policy; from lerobot.policies.pi05_rlt.modeling_pi05_rlt import PI05RLTPolicy'
+          .venv/bin/python -m compileall -q src scripts benchmarks/robodojo
+      - name: RLT, Piper and benchmark contracts (no hardware)
+        env:
+          PYTHONPATH: src:scripts
+        run: .venv/bin/python -m pytest -q tests/rlt tests/robots tests/motors tests/test_robodojo_adapter.py tests/test_robodojo_summarize.py
