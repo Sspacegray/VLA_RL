@@ -1,5 +1,7 @@
 # Piper 采集、训练、推理与前期标定
 
+本文只描述上游 `piper_lerobot` 的**单主臂 + 单从臂**流程。它不是 OpenPI 里的双臂 Piper。双臂任务切换使用 `piper_openpi/profile.py` 的 `left_arm`、`right_arm`、`dual_arm`，不要把两边的动作维度互转。
+
 ## 0. 先完成标定，不先跑策略
 
 Piper 驱动的 `calibrate()` **只初始化当前位姿/平滑 home 并设置软件标志**，并没有测量或保存机械零位。因此 `lerobot-calibrate` 返回不等于机械标定完成。

@@ -1,11 +1,26 @@
 # VLA_RL
 
-Piper 六轴机械臂的 **采集 → π0.5 微调 → RL Token → 在线 RL → 推理**，统一为一个源码目录、一个 Python 环境。
+把两份已有代码放进同一个源码目录。你原来的 Piper 是 OpenPI 里的**双臂机器人**，不是后面合入的 LeRobot 单从臂。
+
+切换任务时使用原有布局名，不要新造一套：
+
+```bash
+python -c 'from piper_openpi.layout import piper_layout; print(piper_layout("left_arm")["controlled_groups"])'
+```
+
+`left_arm` / `right_arm` / `dual_arm` 分别对应只控制左臂、只控制右臂、两臂都控制。三条 CAN 和运行时仍是 OpenPI 的 `can_left`、`can_right` 与 pyAgxArm；本仓库还没有把这套运行时接到 LeRobot 的单总线 follower 上。
+
+目录：
+
+- `/Users/wubinxin/work/VLA_RL`：当前合并仓库。
+- `/Users/wubinxin/work/VLA_RL_upstream_backup/`：原来的 `piper_lerobot` 和 `RL-Token-Pi05-open`，含各自 Git 历史。
+- `/Users/wubinxin/Downloads/openpi-xin-ma-r1pro-lora-web/examples/robots/piper/`：你已经写好的双臂 Piper 采集、训练和运行时。
 
 ## 当前状态
 
 - 使用 RL-Token-Pi05-open 的 LeRobot **0.6.2** 作为唯一基础，合入 Piper SDK/CAN 驱动和部署保护；没有两个同名 `lerobot` 包。
-- Piper joint 状态/动作均为 **7 维**：`joint_1..joint_6`（rad）+ `gripper`（m）。SO-101 仍为 6 维，不能混用其权重、统计或配置。
+- 原有切换在 `piper_openpi/profile.py`：`left_arm`（7D）、`right_arm`（7D）、`dual_arm`（14D）。全量顺序始终是左 6 关节 + 左夹爪 + 右 6 关节 + 右夹爪；关节为弧度，夹爪为 0 闭合、1 开启。单臂任务选已经训好的左臂或右臂模型，不把双臂权重截成单臂。
+- `configs/piper_*.json` 里的 7D `joint_1..gripper` 只属于另一个上游 `piper_lerobot`（一条主臂遥操作一条从臂），不能当成这套双臂 Piper。
 - [完整采训推步骤与标定清单](docs/piper_workflow.md)
 - [Piper 部署保护](docs/piper_real_robot_deployment.md)
 - [RoboDojo 仿真/真机评测与阻塞项](docs/benchmark_robodojo.md)
@@ -62,7 +77,7 @@ docs/                             操作步骤、标定与验证记录
 
 ## 许可证与来源
 
-本项目按 Apache-2.0 发布；保留 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。
+本项目按 Apache-2.0 发布；保留 [LICENSE](LICENSE) 和 [NOTICE](NOTICE)。`piper_openpi/profile.py` 与 `piper_contract.py` 原样来自本机 OpenPI Piper 配置。
 
 - [Hugging Face LeRobot](https://github.com/huggingface/lerobot)
 - [Piper LeRobot](https://github.com/jokeru8/piper_lerobot)，基线 `aa393f5`
